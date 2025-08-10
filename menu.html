@@ -1,0 +1,108 @@
+!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AdulTech - Menú Principal</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <h1>Menú Principal</h1>
+  <p>Hola <span id="nombreUsuario"></span> (<span id="rolUsuario"></span>), elige qué quieres aprender hoy:</p>
+
+  <div class="recordatorio" id="recordatorio"></div>
+
+  <!-- Botones de temas -->
+  <a class="boton" href="whatsapp.html" onclick="marcarAvance('whatsapp')">Usar WhatsApp</a>
+  <a class="boton" href="web.html" onclick="marcarAvance('web')">Navegar por Internet</a>
+  <a class="boton" href="videollamada.html" onclick="marcarAvance('videollamada')">Hacer una Videollamada</a>
+  <a class="boton" href="llamadas.html" onclick="marcarAvance('llamadas')">Hacer una Llamada</a>
+  <a class="boton" href="redes.html" onclick="marcarAvance('redes')">Usar Redes Sociales</a>
+  <a class="boton" href="dispositivos.html" onclick="marcarAvance('dispositivos')">Dispositivos Inteligentes</a>
+
+  <!-- Botón solo para Instructores -->
+  <a id="btnCreadorClases" class="boton" href="crear_clases.html" style="display:none;">
+    Creador de Clases
+  </a>
+
+  <div class="progreso">
+    <h3>Tu progreso:</h3>
+    <label><input type="checkbox" id="check_whatsapp" disabled> WhatsApp</label>
+    <label><input type="checkbox" id="check_web" disabled> Internet</label>
+    <label><input type="checkbox" id="check_videollamada" disabled> Videollamada</label>
+    <label><input type="checkbox" id="check_llamadas" disabled> Llamadas</label>
+    <label><input type="checkbox" id="check_redes" disabled> Redes Sociales</label>
+    <label><input type="checkbox" id="check_dispositivos" disabled> Dispositivos Inteligentes</label>
+  </div>
+
+  <!-- Lista de clases creadas por instructores (visible para estudiantes) -->
+  <div id="listaClasesContainer" style="display:none;">
+    <h2>Clases Disponibles</h2>
+    <ul id="listaClases"></ul>
+  </div>
+
+  <script>
+    const nombre = localStorage.getItem('nombreUsuario');
+    const rol = localStorage.getItem('rolUsuario');
+    document.getElementById('nombreUsuario').innerText = nombre ?? 'usuario';
+    document.getElementById('rolUsuario').innerText = rol ?? 'aprendiz';
+
+    // Mostrar botón de Creador de Clases solo a instructores
+    const btnCreador = document.getElementById('btnCreadorClases');
+    if (rol === "Instructor") {
+      btnCreador.style.display = "inline-block";
+    }
+
+    // Mostrar lista de clases creadas solo a estudiantes
+    const listaClasesContainer = document.getElementById('listaClasesContainer');
+    const listaClases = document.getElementById('listaClases');
+    const clasesGuardadas = JSON.parse(localStorage.getItem('clases') || "[]");
+
+    if (rol !== "Instructor" && clasesGuardadas.length > 0) {
+      listaClasesContainer.style.display = "block";
+      clasesGuardadas.forEach(clase => {
+        const li = document.createElement("li");
+        li.textContent = `${clase.nombre}: ${clase.descripcion}`;
+        listaClases.appendChild(li);
+      });
+    }
+
+    // Guardar avance
+    function marcarAvance(item) {
+      localStorage.setItem('avance_' + item, 'true');
+      const ahora = new Date().toLocaleString();
+      localStorage.setItem('ultimoUso_' + item, ahora);
+    }
+
+    // Mostrar avance marcado
+    const temas = ['whatsapp', 'web', 'videollamada', 'llamadas', 'redes', 'dispositivos'];
+    temas.forEach(function(item) {
+      if (localStorage.getItem('avance_' + item)) {
+        document.getElementById('check_' + item).checked = true;
+      }
+    });
+
+    // Mostrar recordatorio si han pasado días sin ingresar
+    let mensaje = '';
+    let diasSinUso = 0;
+    temas.forEach(function(item) {
+      const fecha = localStorage.getItem('ultimoUso_' + item);
+      if (fecha) {
+        const ultimo = new Date(fecha);
+        const ahora = new Date();
+        const diff = Math.floor((ahora - ultimo) / (1000 * 60 * 60 * 24));
+        if (diff >= 3) {
+          diasSinUso++;
+        }
+      } else {
+        diasSinUso++;
+      }
+    });
+    if (diasSinUso > 0) {
+      mensaje = `¡Hola ${nombre ?? 'usuario'}! Notamos que no has practicado algunos temas en los últimos días. ¡Anímate a seguir aprendiendo!`;
+    } else {
+      mensaje = `¡Buen trabajo, ${nombre ?? 'usuario'}! Estás practicando seguido. ¡Sigue así!`;
+    }
+    document.getElementById('recordatorio').innerText = mensaje;
+  </script>
+</body>
+</html>
